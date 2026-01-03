@@ -65,7 +65,7 @@ function DaftarSiswa() {
       ambilData();
     }
   };
-
+  
   return (
     <div className="min-h-screen bg-gray-100 p-8">
       <div className="mx-auto bg-white rounded-xl shadow-md p-6 max-w-4xl">

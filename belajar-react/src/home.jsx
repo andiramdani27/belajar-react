@@ -1,19 +1,50 @@
-// src/Home.jsx
+import { useState, useEffect } from 'react';
+
 export default function Home() {
+  const [totalSiswa, setTotalSiswa] = useState(0);
+
+  useEffect(() => {
+    // Ambil data jumlah siswa dari backend
+    fetch('http://localhost:5000/siswa/count')
+      .then((res) => res.json())
+      .then((data) => setTotalSiswa(data.total))
+      .catch((err) => console.error("Gagal mengambil jumlah siswa:", err));
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6">
-      <h1 className="text-4xl font-bold text-blue-600 mb-4">Selamat Datang!</h1>
-      <p className="text-gray-600 text-lg mb-8 text-center">
-        Ini adalah aplikasi Sistem Informasi Siswa berbasis React, Express, dan MySQL.
+      <h1 className="text-4xl font-bold text-blue-600 mb-4 text-center">
+        Sistem Informasi Siswa
+      </h1>
+      <p className="text-gray-600 text-lg mb-8 text-center max-w-lg">
+        Selamat datang di dashboard manajemen data siswa sekolah.
       </p>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="p-6 bg-white shadow-md rounded-lg border-l-4 border-blue-500">
-          <h2 className="font-bold text-xl text-gray-800">Total Siswa</h2>
-          <p className="text-3xl font-bold text-blue-600 mt-2">Lihat di menu data...</p>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl">
+        {/* CARD TOTAL SISWA */}
+        <div className="p-8 bg-white shadow-lg rounded-2xl border-t-4 border-blue-500 flex flex-col items-center">
+          <h2 className="font-semibold text-gray-500 uppercase tracking-wider">
+            Total Siswa Terdaftar
+          </h2>
+          <p className="text-6xl font-black text-blue-600 mt-2">
+            {totalSiswa}
+          </p>
+          <p className="text-gray-400 text-sm mt-2">Siswa aktif di database</p>
         </div>
-        <div className="p-6 bg-white shadow-md rounded-lg border-l-4 border-green-500">
-          <h2 className="font-bold text-xl text-gray-800">Status Server</h2>
-          <p className="text-lg text-green-600 mt-2 font-semibold">Online (Port 5000)</p>
+
+        {/* CARD STATUS SERVER */}
+        <div className="p-8 bg-white shadow-lg rounded-2xl border-t-4 border-green-500 flex flex-col items-center">
+          <h2 className="font-semibold text-gray-500 uppercase tracking-wider">
+            Status Database
+          </h2>
+          <div className="flex items-center gap-2 mt-6">
+            <span className="relative flex h-4 w-4">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-4 w-4 bg-green-500"></span>
+            </span>
+            <p className="text-2xl font-bold text-green-600">Terhubung</p>
+          </div>
+          <p className="text-gray-400 text-sm mt-4">MySQL Port 3306</p>
         </div>
       </div>
     </div>

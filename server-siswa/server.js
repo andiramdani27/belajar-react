@@ -61,5 +61,15 @@ app.put('/update/:id', (req, res) => {
   });
 });
 
+// API untuk mengambil jumlah total siswa
+app.get('/siswa/count', (req, res) => {
+  const sql = 'SELECT COUNT(*) AS total FROM siswa';
+  db.query(sql, (err, result) => {
+    if (err) return res.status(500).send(err);
+    // result[0] berisi { total: 10 }
+    res.json(result[0]); 
+  });
+});
+
 const PORT = 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

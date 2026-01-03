@@ -1,6 +1,7 @@
 // src/App.jsx
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import Home from './Home';
+import About from './About';
 import DaftarSiswa from './DaftarSiswa';
 import './index.css';
 
@@ -14,6 +15,7 @@ function App() {
           <div className="flex gap-6">
             <Link to="/" className="text-gray-600 hover:text-blue-600 font-medium">Beranda</Link>
             <Link to="/siswa" className="text-gray-600 hover:text-blue-600 font-medium">Data Siswa</Link>
+            <Link to="/about" className="text-gray-600 hover:text-blue-600 font-medium">Tentang</Link>
           </div>
         </div>
       </nav>
@@ -23,6 +25,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/siswa" element={<DaftarSiswa />} />
+          <Route path="/about" element={<About />} />
         </Routes>
       </div>
     </BrowserRouter>
