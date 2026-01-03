@@ -1,16 +1,13 @@
-import { useState, useEffect } from 'react';
+import useSiswaStore from './store/useSiswaStore';
+import { useEffect } from 'react';
 
 export default function Home() {
-  const [totalSiswa, setTotalSiswa] = useState(0);
+  const { totalSiswa, fetchTotal } = useSiswaStore();
 
   useEffect(() => {
-    // Ambil data jumlah siswa dari backend
-    fetch('http://localhost:5000/siswa/count')
-      .then((res) => res.json())
-      .then((data) => setTotalSiswa(data.total))
-      .catch((err) => console.error("Gagal mengambil jumlah siswa:", err));
+    fetchTotal();
   }, []);
-
+  
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6">
       <h1 className="text-4xl font-bold text-blue-600 mb-4 text-center">
