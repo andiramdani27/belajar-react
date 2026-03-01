@@ -53,7 +53,15 @@ function DaftarSiswa() {
         <form onSubmit={handleTambah} className="flex gap-2 mb-8 bg-blue-50 p-4 rounded-lg shadow-inner">
           <input className="flex-1 border p-2 rounded focus:bg-white" placeholder="Nama..." value={input.nama} onChange={(e) => setInput({...input, nama: e.target.value})} />
           <input className="flex-1 border p-2 rounded focus:bg-white" placeholder="Kelas..." value={input.kelas} onChange={(e) => setInput({...input, kelas: e.target.value})} />
-          <input className="flex-1 border p-2 rounded focus:bg-white" placeholder="Status..." value={input.status} onChange={(e) => setInput({...input, status: e.target.value})} />
+          <select 
+            className="flex-1 border p-2 rounded focus:bg-white bg-white" 
+            value={input.status} 
+            onChange={(e) => setInput({...input, status: e.target.value})}
+          >
+            <option value="">Pilih Status...</option>
+            <option value="Aktif">Aktif</option>
+            <option value="Tidak Aktif">Tidak Aktif</option>
+          </select>
           <button className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 font-bold transition-colors">Tambah</button>
         </form>
 
