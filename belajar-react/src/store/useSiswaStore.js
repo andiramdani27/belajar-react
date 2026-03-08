@@ -1,79 +1,107 @@
 import { create } from 'zustand';
-import Swal from 'sweetalert2'; // Impor SweetAlert2
+import Swal from 'sweetalert2';
+
+// 1. Helper Header (Tetap Sama)
+const getHeaders = () => {
+  const token = localStorage.getItem('token');
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`
+  };
+};
+
+// 2. Helper untuk handle response Error (Centralized)
+const handleResponse = async (res) => {
+  if (res.status === 401 || res.status === 403) {
+    localStorage.removeItem('token');
+    Swal.fire('Sesi Berakhir', 'Silakan login kembali.', 'warning');
+    window.location.href = '/login';
+    return false;
+  }
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(errorData.message || 'Terjadi kesalahan pada server');
+  }
+  return res.json();
+};
 
 const useSiswaStore = create((set, get) => ({
   listSiswa: [],
   totalSiswa: 0,
   searchTerm: "",
-  isLoading: false, // State untuk loading
+  isLoading: false,
 
   setSearchTerm: (term) => set({ searchTerm: term }),
 
-   fetchTotal: async () => {
-        try {
-        const res = await fetch('http://localhost:5000/siswa');
-        const data = await res.json();
-        // Update list DAN total sekaligus
-        set({ listSiswa: data, totalSiswa: data.length }); 
-        } catch (err) {
-        console.error(err);
-        }
-    },
-
+  // Ambil Data
   fetchSiswa: async () => {
-    set({ isLoading: true }); // Mulai loading
+    set({ isLoading: true });
     try {
-      const res = await fetch('http://localhost:5000/siswa');
-      const data = await res.json();
-      set({ listSiswa: data, totalSiswa: data.length });
+      const res = await fetch('http://localhost:5000/siswa', { headers: getHeaders() });
+      const data = await handleResponse(res);
+      if (data) set({ listSiswa: data, totalSiswa: data.length });
+    } catch (err) {
+      console.error("Fetch Error:", err.message);
     } finally {
-      set({ isLoading: false }); // Selesai loading
+      set({ isLoading: false });
     }
   },
 
+  // Tambah Data
   addSiswa: async (inputData) => {
-    const res = await fetch('http://localhost:5000/tambah', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(inputData)
-    });
-    if (res.ok) {
+    try {
+      const res = await fetch('http://localhost:5000/tambah', {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify(inputData)
+      });
+      await handleResponse(res); // Validasi token & error
       await get().fetchSiswa();
       Swal.fire('Berhasil!', 'Data siswa telah ditambahkan.', 'success');
+    } catch (err) {
+      Swal.fire('Gagal!', err.message, 'error');
     }
   },
 
+  // Hapus Data
   deleteSiswa: async (id) => {
-    // Konfirmasi ala SweetAlert2
     const result = await Swal.fire({
       title: 'Apakah anda yakin?',
-      text: "Data yang dihapus tidak bisa dikembalikan!",
+      text: "Data tidak bisa dikembalikan!",
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Ya, hapus!',
-      cancelButtonText: 'Batal'
+      confirmButtonColor: '#d33',
+      confirmButtonText: 'Ya, hapus!'
     });
 
     if (result.isConfirmed) {
-      const res = await fetch(`http://localhost:5000/hapus/${id}`, { method: 'DELETE' });
-      if (res.ok) {
+      try {
+        const res = await fetch(`http://localhost:5000/hapus/${id}`, {
+          method: 'DELETE',
+          headers: getHeaders()
+        });
+        await handleResponse(res);
         await get().fetchSiswa();
         Swal.fire('Terhapus!', 'Data berhasil dibuang.', 'success');
+      } catch (err) {
+        Swal.fire('Gagal!', err.message, 'error');
       }
     }
   },
 
+  // Update Data
   updateSiswa: async (id, dataUpdate) => {
-    const res = await fetch(`http://localhost:5000/update/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(dataUpdate)
-    });
-    if (res.ok) {
+    try {
+      const res = await fetch(`http://localhost:5000/update/${id}`, {
+        method: 'PUT',
+        headers: getHeaders(),
+        body: JSON.stringify(dataUpdate)
+      });
+      await handleResponse(res);
       await get().fetchSiswa();
       Swal.fire('Updated!', 'Data berhasil diperbarui.', 'success');
+    } catch (err) {
+      Swal.fire('Gagal!', err.message, 'error');
     }
   }
 }));

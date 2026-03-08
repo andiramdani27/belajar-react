@@ -1,38 +1,69 @@
 import express from 'express';
 import mysql from 'mysql2';
 import cors from 'cors';
+import jwt from 'jsonwebtoken'; // 1. Tambahkan import JWT
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Koneksi ke MySQL
+// 2. Kunci Rahasia (Jaga ini tetap rahasia di file .env nantinya)
+const SECRET_KEY = '123456';
+
+// Koneksi ke MySQL (Tetap sama)
 const db = mysql.createConnection({
   host: 'localhost',
   user: 'root',
-  password: '', 
+  password: '',
   database: 'sekolah_db'
 });
 
-// Cek koneksi agar kita tahu jika ada yang salah (misal: password salah atau db belum dibuat)
 db.connect((err) => {
-  if (err) {
-    console.error('Database koneksi ERROR:', err.message);
+  if (err) console.error('Database koneksi ERROR:', err.message);
+  else console.log('Database MySQL Berhasil Terhubung!');
+});
+
+// --- 3. MIDDLEWARE VERIFIKASI TOKEN ---
+// Fungsi ini seperti satpam yang mengecek tiket sebelum masuk
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1]; // Mengambil string setelah 'Bearer'
+
+  if (!token) return res.status(401).json({ message: "Akses ditolak, token tidak ada!" });
+
+  jwt.verify(token, SECRET_KEY, (err, user) => {
+    if (err) return res.status(403).json({ message: "Token tidak valid atau kadaluarsa!" });
+    req.user = user; // Simpan data user ke request
+    next(); // Lanjut ke fungsi berikutnya
+  });
+};
+
+// --- 4. API LOGIN (Untuk mendapatkan Token) ---
+app.post('/login', (req, res) => {
+  const { username, password } = req.body;
+
+  // Sederhana: Cek jika admin (Nanti bisa cek ke DB)
+  if (username === 'admin' && password === '123') {
+    const user = { name: username };
+    // Buat token yang berlaku selama 1 jam
+    const token = jwt.sign(user, SECRET_KEY, { expiresIn: '1h' });
+    res.json({ token });
   } else {
-    console.log('Database MySQL Berhasil Terhubung!');
+    res.status(401).json({ message: "Username atau Password salah!" });
   }
 });
 
-// 1. Ambil semua data siswa
-app.get('/siswa', (req, res) => {
+// --- 5. ROUTE YANG DIPROTEKSI (Tambahkan authenticateToken) ---
+// Ambil semua data siswa (Sekarang butuh token)
+app.get('/siswa', authenticateToken, (req, res) => {
   db.query('SELECT * FROM siswa', (err, result) => {
     if (err) return res.status(500).send(err);
     res.json(result);
   });
 });
 
-// 2. Tambah siswa
-app.post('/tambah', (req, res) => {
+// Tambah siswa
+app.post('/tambah', authenticateToken, (req, res) => {
   const { nama, kelas, status } = req.body;
   const sql = 'INSERT INTO siswa (nama, kelas, status) VALUES (?, ?, ?)';
   db.query(sql, [nama, kelas, status], (err, result) => {
@@ -41,8 +72,8 @@ app.post('/tambah', (req, res) => {
   });
 });
 
-// 3. Hapus siswa
-app.delete('/hapus/:id', (req, res) => {
+// Hapus siswa
+app.delete('/hapus/:id', authenticateToken, (req, res) => {
   const { id } = req.params;
   db.query('DELETE FROM siswa WHERE id = ?', [id], (err, result) => {
     if (err) return res.status(500).send(err);
@@ -50,8 +81,8 @@ app.delete('/hapus/:id', (req, res) => {
   });
 });
 
-// 4. Update siswa (Simpan Edit) - Tambahkan ini agar fitur edit di React jalan permanen
-app.put('/update/:id', (req, res) => {
+// Update siswa
+app.put('/update/:id', authenticateToken, (req, res) => {
   const { id } = req.params;
   const { nama, kelas, status } = req.body;
   const sql = 'UPDATE siswa SET nama = ?, kelas = ?, status = ? WHERE id = ?';
@@ -61,13 +92,12 @@ app.put('/update/:id', (req, res) => {
   });
 });
 
-// API untuk mengambil jumlah total siswa
-app.get('/siswa/count', (req, res) => {
+// Jumlah total siswa
+app.get('/siswa/count', authenticateToken, (req, res) => {
   const sql = 'SELECT COUNT(*) AS total FROM siswa';
   db.query(sql, (err, result) => {
     if (err) return res.status(500).send(err);
-    // result[0] berisi { total: 10 }
-    res.json(result[0]); 
+    res.json(result[0]);
   });
 });
 
